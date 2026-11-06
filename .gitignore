@@ -3,3 +3,8 @@ node_modules/
 .dev.vars
 .env
 *.log
+
+# Never commit Google keys or local secrets
+*.json
+!package.json
+!package-lock.json

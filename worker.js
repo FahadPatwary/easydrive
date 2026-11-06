@@ -870,6 +870,59 @@ const pageCSS = String.raw`
 .kv{display:grid;grid-template-columns:140px 1fr;gap:8px 14px;font-size:14px;margin:14px 0}.kv span{color:var(--mu)}
 .bar2{height:8px;border-radius:99px;background:var(--pill);overflow:hidden;margin-top:6px}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2))}
 .acts2{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.dwrap{max-width:1040px;margin:0 auto;padding:22px clamp(14px,3vw,28px) 90px}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.dbrand{display:flex;align-items:center;gap:12px}.dbrand b{display:block;font-size:22px;letter-spacing:-.02em;line-height:1.1}.dbrand small{color:var(--mu);font-size:13px}
+.mark.sm{width:42px;height:42px;border-radius:13px}.mark.sm svg.i{width:22px;height:22px}
+.btn.slim{height:40px;padding:0 18px;font-size:14px}
+.dhead .sm{height:40px}
+.dgrid{display:grid;grid-template-columns:170px minmax(0,1fr);gap:26px;align-items:start}
+.dnav{position:sticky;top:20px;display:flex;flex-direction:column;gap:4px}
+.dnav a{padding:10px 14px;border-radius:12px;color:var(--mu);font-weight:500;font-size:14px;transition:.15s;border:1px solid transparent}
+.dnav a:hover{color:var(--tx);background:var(--card)}
+.dnav a.on{color:var(--tx);background:var(--card-h);border-color:var(--bd);box-shadow:inset 3px 0 0 var(--ac)}
+#root{display:grid;gap:16px;min-width:0}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat3{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:3px;min-width:0;animation:rise .5s both}
+.stat3>span{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat3>b{font-size:19px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat3>b.ok{color:#6ee7b7}.stat3>b.bad{color:#ff8fa5}
+.stat3 small{color:var(--mu);font-size:12.5px}.stat3 small a{color:var(--ac2);display:inline-flex;align-items:center;gap:4px}.stat3 small svg.i{width:13px;height:13px}
+.banner{padding:13px 16px;border-radius:14px;font-size:14px;line-height:1.5}
+.banner.bad{background:rgba(255,95,126,.1);border:1px solid rgba(255,95,126,.35);color:#ffb3c1}
+.banner b{color:#ff8fa5}
+.shead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.shead h2{font-size:17px;margin-bottom:2px}.shead p{color:var(--mu);font-size:14px;margin:0}
+.sect>p{margin-bottom:14px}
+.idrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:14px;background:var(--pill);margin-bottom:14px}
+.idrow>span{color:var(--mu);font-size:13px}.idrow code{flex:1;min-width:0;overflow:auto;white-space:nowrap;font:13px "JetBrains Mono",monospace}
+.sm.ico{display:inline-flex;align-items:center;gap:6px}.sm.ico svg.i{width:15px;height:15px}
+.sm.primary{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border-color:transparent}
+.sm.primary:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4)}
+.sm:disabled{opacity:.6;cursor:default}
+a.sm{display:inline-flex;align-items:center}
+.mini{margin:0 0 16px;padding-left:20px;color:var(--mu);font-size:14px;line-height:1.8}.mini b{color:var(--tx)}.mini a{color:var(--ac2);text-decoration:underline}
+.dtl{margin-top:16px;border-top:1px solid var(--bd);padding-top:14px}
+.dtl summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--mu);list-style:none}
+.dtl summary::before{content:"+ ";color:var(--ac)}.dtl[open] summary::before{content:"\2212  "}
+.dtl[open] summary{margin-bottom:14px;color:var(--tx)}
+.dirty{font-size:13px;color:#fbbf24}
+.meter{height:6px;border-radius:99px;background:var(--pill);overflow:hidden;margin-top:2px}
+.meter i{display:block;height:100%;width:0;border-radius:99px;background:#ff5f7e;transition:width .25s,background .25s}
+.meter.s2 i{background:#fbbf24}.meter.s3 i{background:#34d399}.meter.s4 i{background:#22d3ee}
+.chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--mu);cursor:pointer}
+.chk input{accent-color:var(--ac);width:16px;height:16px}
+.dlist{display:grid;gap:8px}
+.drow{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:var(--pill)}
+.dico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card-h);color:var(--ac);flex:none}
+.dmeta{flex:1;min-width:0}.dmeta b{display:block;font-weight:600;font-size:14.5px}.dmeta small{color:var(--mu);font-size:12.5px}
+.me{font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(52,211,153,.15);color:#6ee7b7;margin-left:6px;vertical-align:1px}
+@media(max-width:820px){
+ .dgrid{grid-template-columns:1fr;gap:14px}
+ .dnav{position:sticky;top:0;z-index:20;flex-direction:row;overflow-x:auto;padding:8px 0;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px)}
+ .dnav a{white-space:nowrap}.dnav a.on{box-shadow:inset 0 -3px 0 var(--ac)}
+ .stats3{grid-template-columns:1fr}
+}
 @media(max-width:600px){.row{grid-template-columns:1fr}.kv{grid-template-columns:1fr}}
 `;
 const pageJS = String.raw`
@@ -963,43 +1016,135 @@ $('#f').onsubmit=function(e){e.preventDefault();say('#m','');var b=$('#go');b.di
 }
 
 function dashboardPage() {
-    const body = `<div class="dash">
-<div class="dtop"><div><h1>Settings</h1></div><div class="acts2"><a class="btn" href="/">Open my drive</a><button class="sm" id="so">Sign out</button></div></div>
-<div id="root"><div class="skel"></div></div></div>`;
+    const body = `<div class="dwrap">
+<header class="dhead">
+<a class="dbrand" href="/"><span class="mark sm">${CLOUD_SVG}</span><div><b>Settings</b><small id="who">&nbsp;</small></div></a>
+<div class="acts2"><button class="ibtn" id="th" title="Toggle theme"></button><a class="btn slim" href="/">Open my drive</a><button class="sm" id="so">Sign out</button></div>
+</header>
+<div class="dgrid">
+<nav class="dnav" id="nav"><a href="#connection" class="on">Connection</a><a href="#drive">Drive</a><a href="#security">Security</a><a href="#devices">Devices</a></nav>
+<main id="root"><div class="skel"></div><div class="skel"></div><div class="skel"></div></main>
+</div></div>`;
     const js = String.raw`
-var S=null;
+var S=null,SESS=[],checkedAt=0,pending=null;
+var ICON={sun:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>',moon:'<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>',copy:'<svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',ext:'<svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/></svg>',dev:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',phone:'<svg class="i" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>'};
 function bytes(n){n=+n;if(!n)return '0 B';var u=['B','KB','MB','GB','TB'],i=Math.min(4,Math.floor(Math.log(n)/Math.log(1024)));return (n/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i]}
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show')},2200)}
-function load(){return fetch('/api/status',{headers:{'X-Requested-With':'gx'}}).then(function(r){if(r.status===401){location.href='/login?next=/dashboard';throw 0}return r.json()}).then(function(s){S=s;draw()})}
-function draw(){
- var g=S.google||{},conn=S.connected,sa=S.mode==='sa',acct,btns='';
- if(sa){
-  acct=conn?((g.error?'<p class="msg bad" style="display:block">Google rejected the key: '+esc(g.error)+'</p>':'')+'<div class="kv"><span>Service account</span><b>'+esc(S.sa_email||'')+'</b></div><p>To show more files, share a folder or Shared Drive with this email in Google Drive (Viewer is enough), then set it as the root below.</p>'):'<p>No key is saved, so your files are unavailable. Paste a key below.</p>';
-  btns=conn?'<button class="sm danger" id="dc">Remove key</button>':'';
- }else{
-  acct=conn?(g.error?'<p class="msg bad" style="display:block">Could not reach Google: '+esc(g.error)+'</p>':'<div class="kv"><span>Google account</span><b>'+esc(g.email||'')+'</b><span>Storage</span><div>'+bytes(g.used)+(g.limit?' of '+bytes(g.limit):'')+(g.limit?'<div class="bar2"><i style="width:'+Math.min(100,g.used/g.limit*100)+'%"></i></div>':'')+'</div></div>'):'<p>Google is not connected, so your files are unavailable until you reconnect.</p>';
-  btns='<a class="sm" href="/connect">'+(conn?'Reconnect':'Connect Google')+'</a>'+(conn?'<button class="sm danger" id="dc">Disconnect</button>':'');
- }
- $('#root').innerHTML=
- '<section class="sect"><h2>'+(sa?'Service account':'Google connection')+' <span class="pill2 '+(conn?'ok':'no')+'">'+(conn?'Connected':'Disconnected')+'</span></h2><p>Read-only access to your Google Drive.</p>'+acct+'<div class="acts2">'+btns+'</div></section>'+
- (sa?'<section class="sect"><h2>Key file</h2><p>Paste a new key if you rotated or replaced it.</p><div class="msg" id="m3"></div><form id="f3"><div class="f"><label for="sk">Key file contents (JSON)</label><textarea id="sk" rows="4" required></textarea></div><button class="sm">Save key</button></form></section>':'')+
- '<section class="sect"><h2>Drive</h2><p>Choose what visitors see. '+(sa?'Paste the link of a folder or Shared Drive shared with the service account.':'Use <b>root</b> for My Drive, or paste a Shared Drive ID or folder link.')+' Search works fully for My Drive and Shared Drives, not for a single folder.</p><div class="msg" id="m1"></div>'+
- '<form id="f1"><div class="row"><div class="f"><label for="dn">Site name</label><input id="dn" maxlength="60" value="'+esc(S.drive_name)+'"></div><div class="f"><label for="rt">Root (id or link)</label><input id="rt" value="'+esc(S.root_id)+'"></div></div><button class="sm">Save</button></form></section>'+
- '<section class="sect"><h2>Password</h2><p>Signed in as <b>'+esc(S.username)+'</b>. Changing your password signs out all other devices.</p><div class="msg" id="m2"></div>'+
- '<form id="f2"><div class="row"><div class="f"><label for="cp0">Current password</label><input id="cp0" type="password" required autocomplete="current-password"></div><div class="f"><label for="np">New password</label><input id="np" type="password" required minlength="10" autocomplete="new-password"></div></div><button class="sm">Change password</button></form></section>'+
- '<section class="sect"><h2>Devices</h2><p>'+S.sessions+' active session'+(S.sessions===1?'':'s')+'.</p><button class="sm" id="ro">Sign out other devices</button></section>';
+function ago(ts){var d=Math.max(0,Date.now()/1000-ts);if(d<60)return 'just now';if(d<3600)return Math.floor(d/60)+' min ago';if(d<86400)return Math.floor(d/3600)+' h ago';return Math.floor(d/86400)+' d ago'}
+function left(ts){var d=ts-Date.now()/1000;if(d<=0)return 'expired';if(d<86400)return Math.ceil(d/3600)+' h left';return Math.floor(d/86400)+' days left'}
+function uaName(s){s=s||'';var b=/Edg\//.test(s)?'Edge':/OPR\//.test(s)?'Opera':/Firefox\//.test(s)?'Firefox':/Chrome\//.test(s)?'Chrome':/Safari\//.test(s)?'Safari':'Browser';var o=/Windows/.test(s)?'Windows':/Android/.test(s)?'Android':/iPhone|iPad/.test(s)?'iOS':/Mac OS/.test(s)?'macOS':/Linux/.test(s)?'Linux':'';return b+(o?' on '+o:'')}
+function copyText(t){var d=function(){toast('Copied')};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(d);else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');d()}catch(e){}a.remove()}}
+function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('gx-theme',t)}catch(e){}$('#th').innerHTML=t==='dark'?ICON.sun:ICON.moon}
+function driveLink(id){return id&&id!=='root'?'https://drive.google.com/drive/folders/'+encodeURIComponent(id):'https://drive.google.com/drive/my-drive'}
+function strength(p){var s=0;if(p.length>=10)s++;if(p.length>=14)s++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))s++;if(/\d/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;return Math.min(4,s)}
+
+function api(url,opts){return fetch(url,Object.assign({headers:{'X-Requested-With':'gx'}},opts||{})).then(function(r){if(r.status===401){location.href='/login?next=/dashboard';throw 0}return r.json()})}
+function load(quiet){
+ return Promise.all([api('/api/status'),api('/api/sessions')]).then(function(a){S=a[0];SESS=a[1].sessions||[];checkedAt=Date.now();draw()});
 }
+
+function keepInputs(fn){
+ var ids=['dn','rt','cp0','np','np2','sk'],kept={},focus=document.activeElement&&document.activeElement.id;
+ ids.forEach(function(i){var e=$('#'+i);if(e)kept[i]=e.value});
+ fn();
+ ids.forEach(function(i){var e=$('#'+i);if(e&&kept[i]!==undefined){e.value=kept[i]}});
+ if(focus&&$('#'+focus)&&$('#'+focus).focus)$('#'+focus).focus();
+ refreshDirty();refreshStrength();
+}
+
+function draw(){keepInputs(render)}
+function render(){
+ var g=S.google||{},conn=S.connected,sa=S.mode==='sa',rootOk=S.root&&S.root.ok,rootName=S.root&&S.root.name?S.root.name:(S.drive_name||'Drive');
+ $('#who').textContent='Signed in as '+S.username;
+ var h='';
+ /* overview */
+ h+='<div class="stats3">'+
+  '<div class="stat3"><span>Status</span><b class="'+(conn&&!g.error&&rootOk!==false?'ok':'bad')+'">'+(!conn?'Disconnected':g.error?'Key problem':rootOk===false?'Folder not reachable':'Connected')+'</b><small>Checked '+new Date(checkedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</small></div>'+
+  '<div class="stat3"><span>Visitors see</span><b title="'+esc(rootName)+'">'+esc(rootName)+'</b><small><a href="'+driveLink(S.root_id)+'" target="_blank" rel="noopener">Open in Google Drive '+ICON.ext+'</a></small></div>'+
+  '<div class="stat3"><span>Signed-in devices</span><b>'+SESS.length+'</b><small><a href="#devices">Manage devices</a></small></div></div>';
+ if(conn&&!g.error&&rootOk===false)h+='<div class="banner bad"><b>The folder is not reachable.</b> '+(sa?'In Google Drive, share it with <b>'+esc(S.sa_email)+'</b> as Viewer, then press Test connection.':'Check the root below or reconnect Google.')+'</div>';
+ if(conn&&g.error)h+='<div class="banner bad"><b>Google rejected the credentials.</b> '+esc(g.error)+'</div>';
+ if(!conn)h+='<div class="banner bad"><b>Not connected.</b> Your files are unavailable until you '+(sa?'add a key file below.':'reconnect Google.')+'</div>';
+
+ /* connection */
+ h+='<section class="sect" id="connection"><div class="shead"><div><h2>Connection</h2><p>'+(sa?'The site reads your Drive through a service account, read-only.':'The site reads your Drive through your Google account, read-only.')+'</p></div><span class="pill2 '+(conn&&!g.error?'ok':'no')+'">'+(conn&&!g.error?'Connected':'Needs attention')+'</span></div>';
+ if(sa){
+  h+='<div class="idrow"><span>Service account</span><code>'+esc(S.sa_email||'not set')+'</code>'+(S.sa_email?'<button class="sm ico" data-copy="'+esc(S.sa_email)+'">'+ICON.copy+' Copy</button>':'')+'</div>'+
+   '<ol class="mini"><li>Open a folder in Google Drive and click <b>Share</b>.</li><li>Add the email above as <b>Viewer</b>.</li><li>Paste that folder link under <a href="#drive">Drive</a> below.</li></ol>'+
+   '<div class="acts2"><button class="sm" id="test">Test connection</button>'+(conn?'<button class="sm danger" id="dc">Remove key</button>':'')+'</div>'+
+   '<details class="dtl"'+(!conn?' open':'')+'><summary>Replace key file</summary><div class="msg" id="m3"></div><form id="f3"><div class="f"><label for="sk">Key file contents (JSON)</label><textarea id="sk" rows="4" required placeholder="Paste the whole downloaded .json file"></textarea></div><button class="sm">Save key</button></form></details>';
+ }else{
+  h+=(conn&&!g.error?'<div class="kv"><span>Google account</span><b>'+esc(g.email||'')+'</b><span>Storage</span><div>'+bytes(g.used)+(g.limit?' of '+bytes(g.limit):'')+(g.limit?'<div class="bar2"><i style="width:'+Math.min(100,g.used/g.limit*100)+'%"></i></div>':'')+'</div></div>':'')+
+   '<div class="acts2"><button class="sm" id="test">Test connection</button><a class="sm" href="/connect">'+(conn?'Reconnect':'Connect Google')+'</a>'+(conn?'<button class="sm danger" id="dc">Disconnect</button>':'')+'</div>';
+ }
+ h+='</section>';
+
+ /* drive */
+ h+='<section class="sect" id="drive"><div class="shead"><div><h2>Drive</h2><p>Choose what visitors see after they sign in.</p></div></div><div class="msg" id="m1"></div>'+
+  '<form id="f1"><div class="row"><div class="f"><label for="dn">Site name</label><input id="dn" maxlength="60" value="'+esc(S.drive_name)+'" data-orig="'+esc(S.drive_name)+'"></div>'+
+  '<div class="f"><label for="rt">Root folder (link or ID)</label><input id="rt" value="'+esc(S.root_id)+'" data-orig="'+esc(S.root_id)+'" placeholder="https://drive.google.com/drive/folders/..."><small>'+(sa?'Must be shared with the service account.':'Use <b>root</b> for all of My Drive.')+'</small></div></div>'+
+  '<div class="note">Search works fully for My Drive and Shared Drives, but not inside a single folder.</div>'+
+  '<div class="acts2"><button class="sm primary" id="save1" disabled>Save changes</button><span class="dirty" id="dirty" hidden>Unsaved changes</span></div></form></section>';
+
+ /* security */
+ h+='<section class="sect" id="security"><div class="shead"><div><h2>Password</h2><p>Changing it signs out every other device.</p></div></div><div class="msg" id="m2"></div>'+
+  '<form id="f2"><div class="f"><label for="cp0">Current password</label><input id="cp0" type="password" required autocomplete="current-password"></div>'+
+  '<div class="row"><div class="f"><label for="np">New password</label><input id="np" type="password" required minlength="10" autocomplete="new-password"><div class="meter" id="meter"><i></i></div><small id="mtext">At least 10 characters.</small></div>'+
+  '<div class="f"><label for="np2">Confirm new password</label><input id="np2" type="password" required autocomplete="new-password"></div></div>'+
+  '<div class="acts2"><button class="sm primary">Change password</button><label class="chk"><input type="checkbox" id="showpw"> Show passwords</label></div></form></section>';
+
+ /* devices */
+ h+='<section class="sect" id="devices"><div class="shead"><div><h2>Devices</h2><p>Places where you are currently signed in.</p></div>'+(SESS.length>1?'<button class="sm danger" id="ro">Sign out all others</button>':'')+'</div><div class="dlist">'+
+  SESS.map(function(x){var mob=/Android|iPhone|iPad|Mobile/.test(x.ua||'');return '<div class="drow"><span class="dico">'+(mob?ICON.phone:ICON.dev)+'</span><div class="dmeta"><b>'+esc(uaName(x.ua))+(x.current?' <em class="me">This device</em>':'')+'</b><small>Signed in '+ago(x.created)+' · '+left(x.expires)+'</small></div>'+(x.current?'':'<button class="sm" data-revoke="'+x.id+'">Sign out</button>')+'</div>'}).join('')+'</div></section>';
+ $('#root').innerHTML=h;
+ spy();
+}
+
+function refreshDirty(){
+ var a=$('#dn'),b=$('#rt'),btn=$('#save1'),d=$('#dirty');if(!a||!b||!btn)return;
+ var dirty=a.value!==a.dataset.orig||b.value!==b.dataset.orig;btn.disabled=!dirty;if(d)d.hidden=!dirty;
+}
+function refreshStrength(){
+ var p=$('#np'),m=$('#meter');if(!p||!m)return;
+ var s=p.value?strength(p.value):0,t=['Too short or weak','Weak','Okay','Strong','Very strong'];
+ m.firstChild.style.width=(p.value?(s+1)*20:0)+'%';m.className='meter s'+s;$('#mtext').textContent=p.value?t[s]:'At least 10 characters.';
+}
+function spy(){
+ var secs=['connection','drive','security','devices'],y=window.scrollY+140,cur=secs[0];
+ secs.forEach(function(id){var e=document.getElementById(id);if(e&&e.offsetTop<=y)cur=id});
+ [].forEach.call(document.querySelectorAll('#nav a'),function(a){a.className=a.getAttribute('href')==='#'+cur?'on':''});
+}
+window.addEventListener('scroll',spy,{passive:true});
+
+document.addEventListener('input',function(e){
+ if(e.target.id==='dn'||e.target.id==='rt')refreshDirty();
+ if(e.target.id==='np')refreshStrength();
+});
+document.addEventListener('change',function(e){
+ if(e.target.id==='showpw'){['cp0','np','np2'].forEach(function(i){$('#'+i).type=e.target.checked?'text':'password'})}
+});
 document.addEventListener('submit',function(e){
- if(e.target.id==='f1'){e.preventDefault();say('#m1','');post('/api/settings',{drive_name:$('#dn').value,root_id:$('#rt').value}).then(function(){toast('Saved');return load()}).catch(function(x){say('#m1',x.message)})}
- if(e.target.id==='f3'){e.preventDefault();say('#m3','');post('/api/sa-key',{service_account_json:$('#sk').value}).then(function(){toast('Key saved');return load()}).catch(function(x){say('#m3',x.message)})}
- if(e.target.id==='f2'){e.preventDefault();say('#m2','');post('/api/password',{current:$('#cp0').value,next:$('#np').value}).then(function(){toast('Password changed');return load()}).catch(function(x){say('#m2',x.message)})}
+ var id=e.target.id;
+ if(id==='f1'){e.preventDefault();say('#m1','');var b=$('#save1');b.disabled=true;b.textContent='Checking…';
+  post('/api/settings',{drive_name:$('#dn').value,root_id:$('#rt').value}).then(function(){toast('Saved');return load()}).catch(function(x){say('#m1',x.message);b.textContent='Save changes';refreshDirty()})}
+ if(id==='f2'){e.preventDefault();say('#m2','');
+  if($('#np').value!==$('#np2').value)return say('#m2','The new passwords do not match.');
+  post('/api/password',{current:$('#cp0').value,next:$('#np').value}).then(function(){['cp0','np','np2'].forEach(function(i){$('#'+i).value=''});toast('Password changed, other devices signed out');return load()}).catch(function(x){say('#m2',x.message)})}
+ if(id==='f3'){e.preventDefault();say('#m3','');post('/api/sa-key',{service_account_json:$('#sk').value}).then(function(){toast('Key saved');$('#sk').value='';return load()}).catch(function(x){say('#m3',x.message)})}
 });
 document.addEventListener('click',function(e){
- var t=e.target;
- if(t.id==='so')post('/logout').then(function(){location.href='/login'});
- if(t.id==='ro')post('/api/revoke-others').then(function(){toast('Other devices signed out');return load()});
- if(t.id==='dc'&&confirm('Your files will be unavailable until you reconnect. Continue?'))post('/api/disconnect').then(function(){toast('Disconnected');return load()});
+ var t=e.target,c;
+ if(t.closest('#th'))return setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+ if(t.closest('#so'))return post('/logout').then(function(){location.href='/login'});
+ if((c=t.closest('[data-copy]')))return copyText(c.dataset.copy);
+ if(t.closest('#test')){var b=t.closest('#test');b.disabled=true;b.textContent='Testing…';return load().then(function(){toast(S.google&&S.google.error?'Google rejected the credentials':(S.root&&S.root.ok===false?'Folder not reachable':'Connection works'))})}
+ if((c=t.closest('[data-revoke]')))return post('/api/sessions/revoke',{id:c.dataset.revoke}).then(function(){toast('Device signed out');return load()});
+ if(t.closest('#ro'))return post('/api/revoke-others').then(function(){toast('Other devices signed out');return load()});
+ if(t.closest('#dc')){var d=t.closest('#dc');
+  if(pending!==d.id){pending='dc';d.textContent='Click again to confirm';clearTimeout(spy.t);spy.t=setTimeout(function(){pending=null;if($('#dc'))$('#dc').textContent=S.mode==='sa'?'Remove key':'Disconnect'},4000);return}
+  pending=null;return post('/api/disconnect').then(function(){toast(S.mode==='sa'?'Key removed':'Disconnected');return load()})}
 });
+setTheme(document.documentElement.dataset.theme||'dark');
 load();`;
     return pageShell('Settings', body, js);
 }
@@ -1217,6 +1362,12 @@ async function dashboardApi(request, url, s, sess) {
                 out.google = r.ok ? { email: a.user && a.user.emailAddress, used: Number(a.storageQuota && a.storageQuota.usage || 0), limit: Number(a.storageQuota && a.storageQuota.limit || 0) } : { error: (a.error && a.error.message) || 'request failed' };
             } catch (e) { out.google = { error: String(e.message || e) }; }
         }
+        if (out.connected && !(out.google && out.google.error)) {
+            try {
+                const f = await checkRoot(await new googleDrive(authConfig, 0).requestOption(), s.root_id);
+                out.root = f ? { ok: true, name: f.name } : { ok: false };
+            } catch (e) { out.root = { ok: false }; }
+        }
         return jsonResp(out);
     }
     if (p === '/api/settings' && request.method === 'POST') {
@@ -1242,6 +1393,16 @@ async function dashboardApi(request, url, s, sess) {
         const salt = randHex(16);
         await setSettings({ pass_salt: salt, pass_hash: await hashPassword(next, salt) }, false);
         await db().prepare('DELETE FROM sessions WHERE id != ?').bind(sess.id).run();
+        return jsonResp({ ok: true });
+    }
+    if (p === '/api/sessions' && request.method === 'GET') {
+        const rows = await db().prepare('SELECT id, created, expires, ua FROM sessions WHERE expires > ? ORDER BY created DESC').bind(Math.floor(Date.now() / 1000)).all();
+        return jsonResp({ sessions: rows.results.map(r => ({ id: r.id, created: r.created, expires: r.expires, ua: r.ua || '', current: r.id === sess.id })) });
+    }
+    if (p === '/api/sessions/revoke' && request.method === 'POST') {
+        const id = String(b.id || '');
+        if (!/^[0-9a-f]{64}$/.test(id) || id === sess.id) return jsonResp({ error: 'Invalid session' }, 400);
+        await db().prepare('DELETE FROM sessions WHERE id = ?').bind(id).run();
         return jsonResp({ ok: true });
     }
     if (p === '/api/revoke-others' && request.method === 'POST') {
