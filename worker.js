@@ -21,14 +21,14 @@ const video_domains_for_dl = ['']; // add multiple cloudflare addresses to balan
 const video_domain_for_dl = video_domains_for_dl[Math.floor(Math.random()*video_domains_for_dl.length)]; // DO NOT TOUCH THIS
 const blocked_region = []; // add regional codes seperated by comma, eg. ['IN', 'US', 'PK']
 const blocked_asn = []; // add ASN numbers from http://www.bgplookingglass.com/list-of-autonomous-system-numbers, eg. [16509, 12345]
-// Secrets/ids come from Cloudflare environment variables (service-worker syntax exposes them as globals).
-// Set CLIENT_ID, CLIENT_SECRET and REFRESH_TOKEN in the dashboard (Settings > Variables and Secrets) or with 'wrangler secret put'.
-const ENV = (name, fallback = '') => (typeof globalThis[name] !== 'undefined' ? globalThis[name] : fallback);
+// Bindings and secrets arrive through the module worker's env object (see export default at the bottom).
+let __env = {};
+const ENV = (name, fallback = '') => (__env && typeof __env[name] !== 'undefined' ? __env[name] : fallback);
 const authConfig = {
     "siteName": "My Drive", // Website name
-    "client_id": ENV('CLIENT_ID'), // Client id from Google Cloud Console
-    "client_secret": ENV('CLIENT_SECRET'), // Client Secret from Google Cloud Console
-    "refresh_token": ENV('REFRESH_TOKEN'), // Authorize token
+    "client_id": "", // Client id from Google Cloud Console
+    "client_secret": "", // Client Secret from Google Cloud Console
+    "refresh_token": "", // Authorize token
     "service_account": false, // true if you're using Service Account instead of user account
     "service_account_json": randomserviceaccount, // don't touch this one
     "files_list_page_size": 50,
@@ -706,7 +706,7 @@ function html(current_drive_order = 0, model = {}) {
 const SESSION_COOKIE = 'gx_session', SESSION_DAYS = 30, MAX_FAILS = 5, FAIL_WINDOW = 15 * 60;
 const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
 /** D1 binding named DB (declared in wrangler.toml) */
-const db = () => /** @type {any} */ (globalThis).DB;
+const db = () => /** @type {any} */ (__env).DB;
 const te = new TextEncoder();
 const toHex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
 const fromHex = h => new Uint8Array((h.match(/../g) || []).map(x => parseInt(x, 16)));
@@ -1459,7 +1459,7 @@ const AUTH0_LOGOUT_URL = auth0.logoutUrl
 const SALT = `keys565`
 
 /** KV namespace binding (only needed when enable_auth0_com is true) */
-const authKV = () => /** @type {any} */ (globalThis).AUTH_STORE;
+const authKV = () => /** @type {any} */ (__env).AUTH_STORE;
 
 const cookieKey = 'AUTH0-AUTH'
 
@@ -1747,12 +1747,18 @@ async function loginHandleRequest(event) {
 }
 //end auth0.com function
 
-addEventListener('fetch', event => {
-    event.respondWith(handleRequest(event.request, event).catch(
-      (err) => new Response("GDI Error Handler Version : 1.0\nReport this Error to Email : admin@hashhackers.com\nInclude : Full details, including screenshot and links\n\n\n" + err.stack, { status: 500 })
-    )
-    );
-});
+const errorResponse = err => new Response('Error: ' + (err && err.stack || err), { status: 500 });
+
+export default {
+    async fetch(request, env, ctx) {
+        __env = env || {};
+        try {
+            return await handleRequest(request, { request });
+        } catch (err) {
+            return errorResponse(err);
+        }
+    }
+};
 
 async function handleRequest(request, event) {
     var loginCheck = await loginHandleRequest(event)
