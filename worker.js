@@ -782,6 +782,9 @@ async function applyConfig(s) {
     authConfig.user_drive_real_root_id = undefined;
     authConfig.siteName = s.site_name || 'My Drive';
     authConfig.client_id = s.client_id || '';
+    authConfig.service_account = s.auth_mode === 'sa';
+    authConfig.service_account_json = {};
+    if (authConfig.service_account && s.sa_json) authConfig.service_account_json = JSON.parse(await unseal(s.sa_json));
     authConfig.client_secret = await unseal(s.client_secret);
     authConfig.refresh_token = await unseal(s.refresh_token);
     authConfig.roots = [{ id: s.root_id || 'root', name: s.drive_name || 'My Drive', protect_file_link: false }];
@@ -837,6 +840,12 @@ const pageCSS = String.raw`
 .f input{height:46px;border-radius:12px;padding:0 14px;background:var(--bg2);border:1px solid var(--bd);color:var(--tx);font:inherit;outline:0;width:100%}
 .f input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow)}
 .f small{color:var(--mu);font-size:12.5px}
+.f textarea{border-radius:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--bd);color:var(--tx);font:12.5px/1.5 "JetBrains Mono",monospace;outline:0;width:100%;resize:vertical}
+.f textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow)}
+.tabs{display:flex;gap:6px;background:var(--pill);padding:4px;border-radius:14px;margin-bottom:18px}
+.tabs button{flex:1;height:42px;border-radius:11px;font-weight:600;color:var(--mu);font-size:14px}
+.tabs button.on{background:var(--card-h);color:var(--tx);box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+.note{padding:10px 14px;border-radius:12px;background:var(--pill);font-size:13.5px;margin:-4px 0 14px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .msg{padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:14px;display:none}
 .msg.bad{display:block;background:rgba(255,95,126,.12);border:1px solid rgba(255,95,126,.4);color:#ff8fa5}
@@ -891,31 +900,50 @@ function setupPage(origin, needKey) {
 <div class="mark">${CLOUD_SVG}</div>
 <h1>Set up your drive</h1>
 <p class="sub2">One-time setup. Afterwards you open this site with just a username and password, no Google sign-in.</p>
-<ol class="steps">
-<li>Open <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Google Cloud Console</a>, create a project, then enable the <b>Google Drive API</b> (APIs &amp; Services &rarr; Library).</li>
-<li>Open <b>OAuth consent screen</b> (type: External). Under Publishing status choose <b>In production</b> so the connection does not expire after 7 days.</li>
-<li>Go to <b>Credentials &rarr; Create credentials &rarr; OAuth client ID &rarr; Web application</b> and add this Authorised redirect URI:
-<div class="copy"><code id="ru">${escHtml(origin)}/oauth/callback</code><button type="button" id="cp">Copy</button></div></li>
-<li>Paste the client ID and secret below, choose your login, and connect Google.</li>
-</ol>
+<div class="tabs"><button type="button" id="t1" class="on">Service account (easiest)</button><button type="button" id="t2">Google sign-in (whole My Drive)</button></div>
 <div class="msg" id="m"></div>
 <form id="f" autocomplete="off">
-<div class="f"><label for="cid">Google client ID</label><input id="cid" required placeholder="123456-abc.apps.googleusercontent.com"></div>
-<div class="f"><label for="cs">Google client secret</label><input id="cs" type="password" required></div>
-<div class="row"><div class="f"><label for="un">Username</label><input id="un" required minlength="3" maxlength="32" autocomplete="username" placeholder="e.g. alex"></div>
+<div id="p1">
+<ol class="steps">
+<li>In <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Google Cloud Console</a> create a project and enable the <b>Google Drive API</b> (APIs &amp; Services &rarr; Library).</li>
+<li>Go to <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener">IAM &amp; Admin &rarr; Service Accounts</a> &rarr; <b>Create service account</b> (no roles needed). Open it &rarr; <b>Keys &rarr; Add key &rarr; Create new key &rarr; JSON</b>. A file downloads.</li>
+<li>In Google Drive, <b>share</b> the folder (or Shared Drive) you want to publish with the service account's email, as <b>Viewer</b>. The email is the <code>client_email</code> inside the downloaded file.</li>
+<li>Paste the file's contents and the folder link below.</li>
+</ol>
+<div class="f"><label for="sa">Key file contents (JSON)</label><textarea id="sa" rows="5" placeholder='{ "type": "service_account", ... }'></textarea></div>
+<div class="note" id="saemail" hidden></div>
+<div class="f"><label for="rt">Folder or Shared Drive link</label><input id="rt" placeholder="https://drive.google.com/drive/folders/..."><small>The one you shared with the service account.</small></div>
+</div>
+<div id="p2" hidden>
+<ol class="steps">
+<li>In Google Cloud Console enable the <b>Google Drive API</b>, then open the <b>OAuth consent screen</b> (External) and set Publishing status to <b>In production</b>, otherwise the connection expires after 7 days.</li>
+<li><b>Credentials &rarr; Create credentials &rarr; OAuth client ID &rarr; Web application</b>, with this Authorised redirect URI:
+<div class="copy"><code id="ru">${escHtml(origin)}/oauth/callback</code><button type="button" id="cp">Copy</button></div></li>
+<li>Paste the client ID and secret below. Google shows an "unverified app" warning for your own app, that is expected.</li>
+</ol>
+<div class="f"><label for="cid">Google client ID</label><input id="cid" placeholder="123456-abc.apps.googleusercontent.com"></div>
+<div class="f"><label for="cs">Google client secret</label><input id="cs" type="password"></div>
+</div>
+<div class="row"><div class="f"><label for="un">Username</label><input id="un" minlength="3" maxlength="32" autocomplete="username" placeholder="e.g. alex"></div>
 <div class="f"><label for="dn">Site name</label><input id="dn" maxlength="60" placeholder="My Drive"></div></div>
-<div class="row"><div class="f"><label for="pw">Password</label><input id="pw" type="password" required minlength="10" autocomplete="new-password"><small>At least 10 characters.</small></div>
-<div class="f"><label for="pw2">Confirm password</label><input id="pw2" type="password" required autocomplete="new-password"></div></div>
-${needKey ? '<div class="f"><label for="sk">Setup key</label><input id="sk" type="password" required><small>The SETUP_KEY secret you configured for this worker.</small></div>' : ''}
-<button class="btn block" id="go">Connect Google Drive &rarr;</button>
+<div class="row"><div class="f"><label for="pw">Password</label><input id="pw" type="password" minlength="10" autocomplete="new-password"><small>At least 10 characters.</small></div>
+<div class="f"><label for="pw2">Confirm password</label><input id="pw2" type="password" autocomplete="new-password"></div></div>
+${needKey ? '<div class="f"><label for="sk">Setup key</label><input id="sk" type="password"><small>The SETUP_KEY secret you configured for this worker.</small></div>' : ''}
+<button class="btn block" id="go">Finish setup &rarr;</button>
 </form></div></div>`;
     const js = String.raw`
+var mode='sa';
+function pick(m){mode=m;$('#p1').hidden=m!=='sa';$('#p2').hidden=m!=='oauth';$('#t1').className=m==='sa'?'on':'';$('#t2').className=m==='oauth'?'on':'';$('#go').textContent=m==='sa'?'Finish setup →':'Connect Google Drive →';say('#m','')}
+$('#t1').onclick=function(){pick('sa')};$('#t2').onclick=function(){pick('oauth')};
 $('#cp').onclick=function(){navigator.clipboard.writeText($('#ru').textContent).then(function(){$('#cp').textContent='Copied'})};
+$('#sa').oninput=function(){var n=$('#saemail');try{var j=JSON.parse($('#sa').value);if(j.client_email){n.hidden=false;n.innerHTML='Share your Drive folder with <b>'+esc(j.client_email)+'</b> (Viewer).';return}}catch(e){}n.hidden=true};
 $('#f').onsubmit=function(e){e.preventDefault();say('#m','');
  if($('#pw').value!==$('#pw2').value)return say('#m','Passwords do not match.');
- var b=$('#go');b.disabled=true;b.textContent='Redirecting to Google…';
- post('/setup/start',{client_id:$('#cid').value,client_secret:$('#cs').value,username:$('#un').value,password:$('#pw').value,drive_name:$('#dn').value,setup_key:$('#sk')?$('#sk').value:''})
- .then(function(r){location.href=r.url}).catch(function(err){say('#m',err.message);b.disabled=false;b.textContent='Connect Google Drive →'})};`;
+ var b=$('#go'),label=b.textContent;b.disabled=true;b.textContent=mode==='sa'?'Checking access…':'Redirecting to Google…';
+ var common={username:$('#un').value,password:$('#pw').value,drive_name:$('#dn').value,setup_key:$('#sk')?$('#sk').value:''};
+ var req=mode==='sa'?post('/setup/sa',Object.assign({service_account_json:$('#sa').value,root:$('#rt').value},common)).then(function(r){location.href=r.next||'/'})
+  :post('/setup/start',Object.assign({client_id:$('#cid').value,client_secret:$('#cs').value},common)).then(function(r){location.href=r.url});
+ req.catch(function(err){say('#m',err.message);b.disabled=false;b.textContent=label})};`;
     return pageShell('Set up', body, js);
 }
 
@@ -944,12 +972,18 @@ function bytes(n){n=+n;if(!n)return '0 B';var u=['B','KB','MB','GB','TB'],i=Math
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show')},2200)}
 function load(){return fetch('/api/status',{headers:{'X-Requested-With':'gx'}}).then(function(r){if(r.status===401){location.href='/login?next=/dashboard';throw 0}return r.json()}).then(function(s){S=s;draw()})}
 function draw(){
- var g=S.google||{},conn=S.connected;
- var acct=conn?(g.error?'<p class="msg bad" style="display:block">Could not reach Google: '+esc(g.error)+'</p>':'<div class="kv"><span>Google account</span><b>'+esc(g.email||'')+'</b><span>Storage</span><div>'+bytes(g.used)+(g.limit?' of '+bytes(g.limit):'')+(g.limit?'<div class="bar2"><i style="width:'+Math.min(100,g.used/g.limit*100)+'%"></i></div>':'')+'</div></div>'):'<p>Google is not connected, so your files are unavailable until you reconnect.</p>';
+ var g=S.google||{},conn=S.connected,sa=S.mode==='sa',acct,btns='';
+ if(sa){
+  acct=conn?((g.error?'<p class="msg bad" style="display:block">Google rejected the key: '+esc(g.error)+'</p>':'')+'<div class="kv"><span>Service account</span><b>'+esc(S.sa_email||'')+'</b></div><p>To show more files, share a folder or Shared Drive with this email in Google Drive (Viewer is enough), then set it as the root below.</p>'):'<p>No key is saved, so your files are unavailable. Paste a key below.</p>';
+  btns=conn?'<button class="sm danger" id="dc">Remove key</button>':'';
+ }else{
+  acct=conn?(g.error?'<p class="msg bad" style="display:block">Could not reach Google: '+esc(g.error)+'</p>':'<div class="kv"><span>Google account</span><b>'+esc(g.email||'')+'</b><span>Storage</span><div>'+bytes(g.used)+(g.limit?' of '+bytes(g.limit):'')+(g.limit?'<div class="bar2"><i style="width:'+Math.min(100,g.used/g.limit*100)+'%"></i></div>':'')+'</div></div>'):'<p>Google is not connected, so your files are unavailable until you reconnect.</p>';
+  btns='<a class="sm" href="/connect">'+(conn?'Reconnect':'Connect Google')+'</a>'+(conn?'<button class="sm danger" id="dc">Disconnect</button>':'');
+ }
  $('#root').innerHTML=
- '<section class="sect"><h2>Google connection <span class="pill2 '+(conn?'ok':'no')+'">'+(conn?'Connected':'Disconnected')+'</span></h2><p>Read-only access to your Google Drive.</p>'+acct+
- '<div class="acts2"><a class="sm" href="/connect">'+(conn?'Reconnect':'Connect Google')+'</a>'+(conn?'<button class="sm danger" id="dc">Disconnect</button>':'')+'</div></section>'+
- '<section class="sect"><h2>Drive</h2><p>Choose what visitors see. Use <b>root</b> for My Drive, or paste a Shared Drive ID or folder link. Search works fully for My Drive and Shared Drives, not for a single folder.</p><div class="msg" id="m1"></div>'+
+ '<section class="sect"><h2>'+(sa?'Service account':'Google connection')+' <span class="pill2 '+(conn?'ok':'no')+'">'+(conn?'Connected':'Disconnected')+'</span></h2><p>Read-only access to your Google Drive.</p>'+acct+'<div class="acts2">'+btns+'</div></section>'+
+ (sa?'<section class="sect"><h2>Key file</h2><p>Paste a new key if you rotated or replaced it.</p><div class="msg" id="m3"></div><form id="f3"><div class="f"><label for="sk">Key file contents (JSON)</label><textarea id="sk" rows="4" required></textarea></div><button class="sm">Save key</button></form></section>':'')+
+ '<section class="sect"><h2>Drive</h2><p>Choose what visitors see. '+(sa?'Paste the link of a folder or Shared Drive shared with the service account.':'Use <b>root</b> for My Drive, or paste a Shared Drive ID or folder link.')+' Search works fully for My Drive and Shared Drives, not for a single folder.</p><div class="msg" id="m1"></div>'+
  '<form id="f1"><div class="row"><div class="f"><label for="dn">Site name</label><input id="dn" maxlength="60" value="'+esc(S.drive_name)+'"></div><div class="f"><label for="rt">Root (id or link)</label><input id="rt" value="'+esc(S.root_id)+'"></div></div><button class="sm">Save</button></form></section>'+
  '<section class="sect"><h2>Password</h2><p>Signed in as <b>'+esc(S.username)+'</b>. Changing your password signs out all other devices.</p><div class="msg" id="m2"></div>'+
  '<form id="f2"><div class="row"><div class="f"><label for="cp0">Current password</label><input id="cp0" type="password" required autocomplete="current-password"></div><div class="f"><label for="np">New password</label><input id="np" type="password" required minlength="10" autocomplete="new-password"></div></div><button class="sm">Change password</button></form></section>'+
@@ -957,13 +991,14 @@ function draw(){
 }
 document.addEventListener('submit',function(e){
  if(e.target.id==='f1'){e.preventDefault();say('#m1','');post('/api/settings',{drive_name:$('#dn').value,root_id:$('#rt').value}).then(function(){toast('Saved');return load()}).catch(function(x){say('#m1',x.message)})}
+ if(e.target.id==='f3'){e.preventDefault();say('#m3','');post('/api/sa-key',{service_account_json:$('#sk').value}).then(function(){toast('Key saved');return load()}).catch(function(x){say('#m3',x.message)})}
  if(e.target.id==='f2'){e.preventDefault();say('#m2','');post('/api/password',{current:$('#cp0').value,next:$('#np').value}).then(function(){toast('Password changed');return load()}).catch(function(x){say('#m2',x.message)})}
 });
 document.addEventListener('click',function(e){
  var t=e.target;
  if(t.id==='so')post('/logout').then(function(){location.href='/login'});
  if(t.id==='ro')post('/api/revoke-others').then(function(){toast('Other devices signed out');return load()});
- if(t.id==='dc'&&confirm('Disconnect Google Drive? Your files will be unavailable until you reconnect.'))post('/api/disconnect').then(function(){toast('Disconnected');return load()});
+ if(t.id==='dc'&&confirm('Your files will be unavailable until you reconnect. Continue?'))post('/api/disconnect').then(function(){toast('Disconnected');return load()});
 });
 load();`;
     return pageShell('Settings', body, js);
@@ -978,6 +1013,7 @@ async function productRoute(request, url, s) {
         if (done) return redirectTo('/');
         if (p === '/setup' && m === 'GET') return htmlResp(setupPage(url.origin, !!ENV('SETUP_KEY')));
         if (p === '/setup/start' && m === 'POST') return setupStart(request, url);
+        if (p === '/setup/sa' && m === 'POST') return setupServiceAccount(request, url);
         return redirectTo('/setup');
     }
     if (!done) return redirectTo('/setup');
@@ -1016,6 +1052,62 @@ function googleAuthUrl(clientId, origin, state) {
 }
 const oauthCookie = (state, maxAge) => `gx_oauth=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 
+function checkNewLogin(user, pw) {
+    if (!/^[A-Za-z0-9_.-]{3,32}$/.test(user)) return 'Username must be 3-32 letters, numbers, dots, dashes or underscores.';
+    if (pw.length < 10) return 'Password must be at least 10 characters.';
+    return '';
+}
+function parseServiceAccount(raw) {
+    let j;
+    try { j = JSON.parse(String(raw || '')); } catch (e) { return { error: 'That is not valid JSON. Paste the whole contents of the downloaded key file.' }; }
+    if (!j || j.type !== 'service_account' || !j.client_email || !j.private_key) return { error: 'This is not a service-account key file (it should contain "type": "service_account").' };
+    return { json: j };
+}
+function parseRoot(input) {
+    let root = String(input || '').trim();
+    const mt = root.match(/\/folders\/([\w-]+)/) || root.match(/\/drives\/([\w-]+)/) || root.match(/[?&]id=([\w-]+)/);
+    if (mt) root = mt[1];
+    return /^[\w-]+$/.test(root) ? root : '';
+}
+async function saToken(j) {
+    const jwt = await JSONWebToken.generateGCPToken(j);
+    const r = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }).toString()
+    });
+    const t = await r.json();
+    if (!t.access_token) throw new Error(t.error_description || t.error || 'Google rejected the key');
+    return t.access_token;
+}
+
+async function setupServiceAccount(request, url) {
+    if (!sameOrigin(request, url)) return jsonResp({ error: 'Blocked request' }, 403);
+    let b;
+    try { b = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid request' }, 400); }
+    const need = ENV('SETUP_KEY');
+    if (need && !safeEq(String(b.setup_key || ''), String(need))) return jsonResp({ error: 'Incorrect setup key' }, 403);
+    const user = String(b.username || '').trim(), pw = String(b.password || '');
+    const bad = checkNewLogin(user, pw);
+    if (bad) return jsonResp({ error: bad }, 400);
+    const parsed = parseServiceAccount(b.service_account_json);
+    if (parsed.error) return jsonResp({ error: parsed.error }, 400);
+    const sa = parsed.json, root = parseRoot(b.root);
+    if (!root) return jsonResp({ error: 'Paste the link of the Drive folder (or Shared Drive) you shared with ' + sa.client_email + '.' }, 400);
+    let tok;
+    try { tok = await saToken(sa); } catch (e) { return jsonResp({ error: 'Google rejected the key: ' + (e.message || e) }, 400); }
+    let found = null;
+    try { found = await checkRoot({ headers: { authorization: 'Bearer ' + tok } }, root); } catch (e) { found = null; }
+    if (!found) return jsonResp({ error: 'Could not open that folder. In Google Drive, share it with ' + sa.client_email + ' as Viewer, then try again.' }, 400);
+    const name = String(b.drive_name || '').trim().slice(0, 60) || found.name || 'My Drive';
+    const salt = randHex(16);
+    await setSettings({
+        auth_mode: 'sa', sa_json: await seal(JSON.stringify(sa)), sa_email: sa.client_email, client_id: '', client_secret: '', refresh_token: '',
+        username: user, pass_salt: salt, pass_hash: await hashPassword(pw, salt),
+        site_name: name, drive_name: name, root_id: found.id, connected: '1', setup_complete: '1', oauth_state: '', oauth_exp: '0'
+    });
+    return jsonResp({ ok: true, next: '/' }, 200, [sessionCookie(await createSession(request), SESSION_DAYS * 86400)]);
+}
+
 async function setupStart(request, url) {
     if (!sameOrigin(request, url)) return jsonResp({ error: 'Blocked request' }, 403);
     let b;
@@ -1031,7 +1123,7 @@ async function setupStart(request, url) {
     if (pw.length < 10) return jsonResp({ error: 'Password must be at least 10 characters.' }, 400);
     const salt = randHex(16), state = randHex(24);
     await setSettings({
-        client_id: cid, client_secret: await seal(sec), username: user, pass_salt: salt, pass_hash: await hashPassword(pw, salt),
+        auth_mode: 'oauth', sa_json: '', sa_email: '', client_id: cid, client_secret: await seal(sec), username: user, pass_salt: salt, pass_hash: await hashPassword(pw, salt),
         site_name: name, drive_name: name, root_id: 'root', connected: '0',
         oauth_state: state, oauth_kind: 'setup', oauth_exp: Math.floor(Date.now() / 1000) + 600
     });
@@ -1039,6 +1131,7 @@ async function setupStart(request, url) {
 }
 
 async function startReconnect(url, s) {
+    if (s.auth_mode === 'sa') return redirectTo('/dashboard');
     const state = randHex(24);
     await setSettings({ oauth_state: state, oauth_kind: 'reconnect', oauth_exp: Math.floor(Date.now() / 1000) + 600 }, false);
     return redirectTo(googleAuthUrl(s.client_id, url.origin, state), [oauthCookie(state, 600)]);
@@ -1093,9 +1186,8 @@ async function doLogin(request, url, s) {
     return jsonResp({ ok: true, next: safeNext(b.next) }, 200, [sessionCookie(await createSession(request), SESSION_DAYS * 86400)]);
 }
 
-async function checkRoot(g, id) {
+async function checkRoot(opt, id) {
     if (id === 'root') return { id: 'root', name: 'My Drive' };
-    const opt = await g.requestOption();
     let r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?fields=id,name,mimeType&supportsAllDrives=true`, opt);
     if (r.ok) {
         const f = await r.json();
@@ -1114,8 +1206,10 @@ async function dashboardApi(request, url, s, sess) {
     if (p === '/api/status' && request.method === 'GET') {
         await applyConfig(s);
         const n = await db().prepare('SELECT COUNT(*) AS n FROM sessions WHERE expires > ?').bind(Math.floor(Date.now() / 1000)).first();
-        const out = { username: s.username, drive_name: s.drive_name, root_id: s.root_id, connected: s.connected === '1', sessions: n ? n.n : 1 };
-        if (out.connected) {
+        const out = { username: s.username, drive_name: s.drive_name, root_id: s.root_id, connected: s.connected === '1', sessions: n ? n.n : 1, mode: s.auth_mode === 'sa' ? 'sa' : 'oauth', sa_email: s.sa_email || '' };
+        if (out.connected && out.mode === 'sa') {
+            try { await saToken(authConfig.service_account_json); out.google = { email: s.sa_email }; } catch (e) { out.google = { error: String(e.message || e) }; }
+        } else if (out.connected) {
             try {
                 const g = new googleDrive(authConfig, 0);
                 const r = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress),storageQuota(limit,usage)', await g.requestOption());
@@ -1131,9 +1225,10 @@ async function dashboardApi(request, url, s, sess) {
         if (mt) root = mt[1];
         if (!/^[\w-]+$/.test(root)) return jsonResp({ error: 'That is not a valid folder ID or link.' }, 400);
         if (s.connected !== '1') return jsonResp({ error: 'Connect Google first.' }, 400);
+        if (s.auth_mode === 'sa' && root === 'root') return jsonResp({ error: 'Paste the link of the folder or Shared Drive you shared with the service account.' }, 400);
         await applyConfig(s);
         let found;
-        try { found = await checkRoot(new googleDrive(authConfig, 0), root); } catch (e) { found = null; }
+        try { found = await checkRoot(await new googleDrive(authConfig, 0).requestOption(), root); } catch (e) { found = null; }
         if (!found) return jsonResp({ error: 'Could not open that folder with your Google account.' }, 400);
         const name = String(b.drive_name || '').trim().slice(0, 60) || found.name || 'My Drive';
         await setSettings({ root_id: found.id, drive_name: name, site_name: name });
@@ -1153,7 +1248,23 @@ async function dashboardApi(request, url, s, sess) {
         await db().prepare('DELETE FROM sessions WHERE id != ?').bind(sess.id).run();
         return jsonResp({ ok: true });
     }
+    if (p === '/api/sa-key' && request.method === 'POST') {
+        if (s.auth_mode !== 'sa') return jsonResp({ error: 'Not in service-account mode.' }, 400);
+        const parsed = parseServiceAccount(b.service_account_json);
+        if (parsed.error) return jsonResp({ error: parsed.error }, 400);
+        let tok;
+        try { tok = await saToken(parsed.json); } catch (e) { return jsonResp({ error: 'Google rejected the key: ' + (e.message || e) }, 400); }
+        let ok = null;
+        try { ok = await checkRoot({ headers: { authorization: 'Bearer ' + tok } }, s.root_id); } catch (e) { ok = null; }
+        if (!ok) return jsonResp({ error: 'This key cannot open your current folder. Share it with ' + parsed.json.client_email + ' (Viewer) first.' }, 400);
+        await setSettings({ sa_json: await seal(JSON.stringify(parsed.json)), sa_email: parsed.json.client_email, connected: '1' });
+        return jsonResp({ ok: true });
+    }
     if (p === '/api/disconnect' && request.method === 'POST') {
+        if (s.auth_mode === 'sa') {
+            await setSettings({ sa_json: '', connected: '0' });
+            return jsonResp({ ok: true });
+        }
         try {
             const tok = await unseal(s.refresh_token);
             if (tok) await fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(tok), { method: 'POST' });
@@ -1409,16 +1520,17 @@ const JSONWebToken = {
         const iat = Math.floor(Date.now() / 1000);
         var payload = {
             "iss": serviceAccount.client_email,
-            "scope": "https://www.googleapis.com/auth/drive",
+            "scope": "https://www.googleapis.com/auth/drive.readonly",
             "aud": "https://oauth2.googleapis.com/token",
             "exp": iat + 3600,
             "iat": iat
         };
-        const encPayload = btoa(JSON.stringify(payload));
-        const encHeader = btoa(JSON.stringify(this.header));
+        const b64u = x => btoa(x).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const encPayload = b64u(JSON.stringify(payload));
+        const encHeader = b64u(JSON.stringify(this.header));
         var key = await this.importKey(serviceAccount.private_key);
         var signed = await this.createSignature(encHeader + "." + encPayload, key);
-        return encHeader + "." + encPayload + "." + this.textUtils.arrayBufferToBase64(signed).replace(/\//g, '_').replace(/\+/g, '-');
+        return encHeader + "." + encPayload + "." + this.textUtils.arrayBufferToBase64(signed).replace(/\//g, '_').replace(/\+/g, '-').replace(/=+$/, '');
     },
     textUtils: {
         base64ToArrayBuffer: function(base64) {

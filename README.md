@@ -26,16 +26,24 @@ Everything (login, sessions, the Google connection) is stored in a Cloudflare **
 5. Open `https://<your-worker>.workers.dev` and follow the wizard.
 
 ### The Google part (the wizard walks you through it)
-- Google Cloud Console > create a project > enable **Google Drive API**.
-- OAuth consent screen: External, then set Publishing status to **In production** (otherwise Google expires the
-  connection after 7 days). You will see an "unverified app" warning for your own app; that is expected.
+
+**Service account (default, easiest).** No consent screen, no "unverified app" warning, no expiry.
+1. Google Cloud Console: create a project and enable the **Google Drive API**.
+2. IAM & Admin > Service Accounts > Create service account (no roles needed). Open it > Keys > Add key > JSON. A key file downloads.
+3. In Google Drive, share the folder or Shared Drive you want to publish with the service account's email (`client_email` in the file) as **Viewer**.
+4. Paste the key file contents and the folder link into the setup wizard.
+
+The service account only sees what you share with it. Share more folders any time, or use a Shared Drive and add the account as a member.
+
+**Google sign-in (OAuth), for your whole My Drive.**
+- Enable the Drive API; OAuth consent screen: External, Publishing status **In production** (otherwise Google expires the connection after 7 days; the "unverified app" warning is expected for your own app).
 - Credentials > OAuth client ID > Web application > Authorised redirect URI: `https://<your-worker>/oauth/callback`.
 
 ## Security notes
 - Passwords are hashed with PBKDF2-SHA256 (100k iterations). Sessions are random tokens stored hashed, 30-day expiry.
 - Login is rate limited (5 failures per IP per 15 minutes). State-changing requests check Origin and a custom header.
-- The Google connection is read-only (`drive.readonly`). Disconnecting revokes the token at Google.
-- Without `SECRET_KEY`, the Google client secret and refresh token sit unencrypted in your private D1 database.
+- Google access is read-only (`drive.readonly`) in both modes. Disconnecting revokes the OAuth token at Google; in service-account mode, removing the key stops access, and you can delete the key in Google Cloud Console.
+- Without `SECRET_KEY`, the service-account key (or the OAuth client secret and refresh token) sits unencrypted in your private D1 database.
 
 ## Local development
 ```
