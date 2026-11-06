@@ -1,0 +1,4 @@
+# Copy to .dev.vars (git-ignored) for local `npm run dev`
+CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+CLIENT_SECRET=your-google-oauth-client-secret
+REFRESH_TOKEN=your-google-oauth-refresh-token

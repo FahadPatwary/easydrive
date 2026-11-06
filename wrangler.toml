@@ -1,0 +1,16 @@
+name = "file"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+# D1 database that stores the login, sessions and the Google connection.
+# Wrangler creates it automatically on first deploy. If your Wrangler is older
+# than automatic provisioning, run `npx wrangler d1 create drive-index` and add
+# the printed database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "drive-index"
+
+# Optional secrets (Worker > Settings > Variables and Secrets):
+#   SECRET_KEY  encrypts the stored Google credentials inside D1
+#   SETUP_KEY   required on the first-run setup page, stops strangers claiming a fresh deploy
