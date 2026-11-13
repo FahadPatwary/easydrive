@@ -316,6 +316,8 @@ kbd{font:500 11px "JetBrains Mono",monospace;padding:2px 6px;border-radius:6px;b
 @keyframes sheen{to{background-position:100% 0}}
 .hh .lead{margin:16px 0 24px;max-width:560px;color:var(--mu);font-size:clamp(15px,2vw,18px);text-align:left}
 .hh .lead b{color:var(--tx);font-variant-numeric:tabular-nums}
+.counting{opacity:.7;animation:pulse 1.1s ease-in-out infinite alternate}@keyframes pulse{to{opacity:.25}}
+.mu.fine{font-size:12px;margin:12px 0 0}
 .hh-act{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .hh .hero-search{min-width:min(420px,100%)}
 .orb{position:absolute;border-radius:50%;filter:blur(40px);pointer-events:none;z-index:-1}
@@ -601,12 +603,49 @@ function countUp(){
   requestAnimationFrame(f);
  });
 }
-function heroHTML(st,note){
+
+/* ---- library totals: whole tree from the server (stats), top level as a fallback ---- */
+var KORDER=['folder','video','audio','image','doc','code','archive','file'];
+function kindsFromStats(s){
+ var c={};Object.keys(s.types||{}).forEach(function(k){var p=k.split('|'),kk=kind({name:'x.'+p[0],mimeType:(p[1]||'')+'/x'});c[kk]=(c[kk]||0)+s.types[k][0]});
+ if(s.folders)c.folder=s.folders;return c;
+}
+function topStats(items,more){
+ var st={files:0,folders:0,size:0,kinds:{},partial:more,top:true};
+ items.forEach(function(it){st.kinds[it._k]=(st.kinds[it._k]||0)+1;if(it._k==='folder')st.folders++;else{st.files++;st.size+=(+it.size||0)}});
+ return st;
+}
+function nounN(n,w){return n===1?w:w+'s'}
+function leadHTML(st){
+ if(!st)return '<span class="counting">Counting your library…</span>';
+ var m=st.partial?'+':'';
+ return 'Your library holds <b data-count="'+st.files+'">0</b>'+m+' '+nounN(st.files,'file')+' across <b data-count="'+st.folders+'">0</b>'+m+' '+nounN(st.folders,'folder')+(st.size?' · '+fsize(st.size)+m:'')+(st.top?' (top level only)':'')+'.';
+}
+function snapHTML(st){
+ if(!st)return '<section class="b b-snap" id="snap"><div class="bt"><h3>Library</h3><span class="bs">counting…</span></div>'+skel(2)+'</section>';
+ var c=st.kinds||kindsFromStats(st),m=st.partial?'+':'',n=st.files+st.folders;
+ return '<section class="b b-snap" id="snap"><div class="bt"><h3>Library</h3><span class="bs">'+n+m+' '+nounN(n,'item')+(st.top?' · top level':'')+'</span></div>'+
+  '<div class="big-n">'+(st.size?fsize(st.size)+m:'—')+'</div><p class="mu">'+st.files+m+' '+nounN(st.files,'file')+' in '+st.folders+m+' '+nounN(st.folders,'folder')+'</p>'+
+  '<div class="seg2">'+KORDER.filter(function(k){return c[k]}).map(function(k){return '<i style="flex:'+c[k]+';background:var(--k-'+k+')" title="'+LABEL[k]+'"></i>'}).join('')+'</div>'+
+  '<div class="legend">'+KORDER.filter(function(k){return c[k]}).map(function(k){return '<span><i style="background:var(--k-'+k+')"></i>'+LABEL[k]+' <b>'+c[k]+'</b></span>'}).join('')+'</div>'+
+  (st.partial?'<p class="mu fine">Large library: counted as much as one pass allows, so totals read as “at least”.</p>':'')+'</section>';
+}
+function applyStats(st){
+ var lead=$('#lead');if(lead)lead.innerHTML=leadHTML(st);
+ var snap=$('#snap');if(snap)snap.outerHTML=snapHTML(st);
+ countUp();
+}
+var SC=null;
+async function loadStats(){
+ if(SC&&Date.now()-SC.t<60000)return SC.d;
+ var d=await api('/0:stats',{});SC={t:Date.now(),d:d};return d;
+}
+
+function heroHTML(note){
  var name=(UI.user||UI.siteName||'there');name=name.charAt(0).toUpperCase()+name.slice(1);
  var date=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
- var lead=note||(st?'Your library holds <b data-count="'+st.files+'">0</b>'+(st.more?'+':'')+' files across <b data-count="'+st.folders+'">0</b>'+(st.more?'+':'')+' folders'+(st.size?' · '+fsize(st.size):'')+'.':'Browse, preview and download your files — fast, from anywhere.');
  return '<section class="hh"><span class="orb o1"></span><span class="orb o2"></span><span class="eyebrow">'+date+'</span>'+
-  '<h1><span class="hello">'+greet()+',</span><br><span class="grad">'+esc(name)+'</span></h1><p class="lead">'+lead+'</p>'+
+  '<h1><span class="hello">'+greet()+',</span><br><span class="grad">'+esc(name)+'</span></h1><p class="lead" id="lead">'+(note||'Browse, preview and download your files — fast, from anywhere.')+'</p>'+
   '<div class="hh-act"><button class="hero-search" data-pal>'+ic('search')+'<span>Search everything…</span><kbd>Ctrl K</kbd></button><button class="btn" data-go="/0:/">Browse all files '+ic('r')+'</button></div></section>';
 }
 function rowHTML(attr,k,name,meta){
@@ -616,16 +655,12 @@ function bentoHTML(items,more){
  var folders=items.filter(function(x){return x._k==='folder'}),files=items.filter(function(x){return x._k!=='folder'});
  var h='';
  /* folders */
- h+='<section class="b b-folders"><div class="bt"><h3>Folders</h3><span class="bs">'+folders.length+(more?'+':'')+' in total</span></div>';
+ h+='<section class="b b-folders"><div class="bt"><h3>Folders</h3><span class="bs">'+folders.length+(more?'+':'')+' at the top level</span></div>';
  h+=folders.length?'<div class="fgrid">'+folders.slice(0,8).map(function(it,i){var g=GR[hashN(it.name)%GR.length];return '<a class="fcard" data-open="'+it._i+'" href="#" style="--g1:'+g[0]+';--g2:'+g[1]+';--n:'+i+'"><span class="fic">'+ic('folder')+'</span><b>'+esc(it.name)+'</b><small>Open folder '+ic('r')+'</small></a>'}).join('')+'</div>':
   '<div class="mt">'+ic('empty')+'<p>No folders here yet. Everything is at the top level.</p></div>';
  h+='</section>';
- /* snapshot */
- var counts={},tot=0;items.forEach(function(it){counts[it._k]=(counts[it._k]||0)+1;if(it._k!=='folder')tot+=(+it.size||0)});
- var order=['folder','video','audio','image','doc','code','archive','file'],n=items.length||1;
- h+='<section class="b b-snap"><div class="bt"><h3>Library</h3><span class="bs">'+items.length+(more?'+':'')+' items</span></div><div class="big-n">'+(tot?fsize(tot):'—')+'</div><p class="mu">of files at the top level</p>'+
-  '<div class="seg2">'+order.filter(function(k){return counts[k]}).map(function(k){return '<i style="flex:'+counts[k]+';background:var(--k-'+k+')" title="'+LABEL[k]+'"></i>'}).join('')+'</div>'+
-  '<div class="legend">'+order.filter(function(k){return counts[k]}).map(function(k){return '<span><i style="background:var(--k-'+k+')"></i>'+LABEL[k]+' <b>'+counts[k]+'</b></span>'}).join('')+'</div></section>';
+ /* snapshot (filled in once the whole-tree count arrives) */
+ h+=snapHTML(null);
  /* recent */
  var recent=files.slice().sort(function(a,b){return new Date(b.modifiedTime)-new Date(a.modifiedTime)}).slice(0,5);
  h+='<section class="b b-3"><div class="bt"><h3>Recently updated</h3></div>'+(recent.length?recent.map(function(it){return rowHTML('data-open="'+it._i+'"',it._k,it.name,[fsize(it.size),it.modifiedTime?agoMs(new Date(it.modifiedTime).getTime()):''].filter(Boolean).join(' · '))}).join(''):'<div class="mt">'+ic('empty')+'<p>No files yet.</p></div>')+'</section>';
@@ -648,25 +683,26 @@ async function home(){
  $('#crumbs').innerHTML='';$('#bar').hidden=true;$('#readme').innerHTML='';$('#head').innerHTML='';
  var L=$('#list');L.className='home';
  if(NAMES.length>1){
-  L.innerHTML=heroHTML(null)+'<section class="b b-wide"><div class="bt"><h3>Your drives</h3></div><div class="drives">'+NAMES.map(function(n,i){return '<a class="drive" href="/'+i+':/" style="--n:'+i+'"><div class="tile">'+ic('cloud')+'</div><div><b>'+esc(n)+'</b><small>Open drive →</small></div></a>'}).join('')+'</div></section>';
+  L.innerHTML=heroHTML()+'<section class="b b-wide"><div class="bt"><h3>Your drives</h3></div><div class="drives">'+NAMES.map(function(n,i){return '<a class="drive" href="/'+i+':/" style="--n:'+i+'"><div class="tile">'+ic('cloud')+'</div><div><b>'+esc(n)+'</b><small>Open drive →</small></div></a>'}).join('')+'</div></section>';
   return;
  }
  ORDER=0;BASE='/0:';S.path='/';S.order=0;
- L.innerHTML=heroHTML(null)+'<div class="b b-wide">'+skel(2)+'</div>';
+ L.innerHTML=heroHTML(leadHTML(null))+'<div class="b b-wide">'+skel(2)+'</div>';
  try{
   if(!HC||Date.now()-HC.t>60000){
    var r=await api(BASE+'/',{page_index:0,password:sessionStorage.getItem('gx-pw:0:/')||''});
    if(S.mode!=='home')return;
-   if(r&&r.error){L.innerHTML=heroHTML(null,'This folder is password protected. Open it to unlock.');return}
+   if(r&&r.error){L.innerHTML=heroHTML('This folder is password protected. Open it to unlock.');return}
    var items=prep((r&&r.data&&r.data.files)||[],'/');
    HC={t:Date.now(),items:items,more:!!(r&&r.nextPageToken)};
   }
   if(S.mode!=='home')return;
   S.items=HC.items;reindex();
-  var folders=0,files=0,size=0;HC.items.forEach(function(it){if(it._k==='folder')folders++;else{files++;size+=(+it.size||0)}});
-  L.innerHTML=heroHTML({files:files,folders:folders,size:size,more:HC.more})+bentoHTML(HC.items,HC.more);
-  countUp();
- }catch(e){if(S.mode==='home')L.innerHTML=heroHTML(null,'Could not load your files ('+esc(e.message||'error')+').')+'<div class="b b-wide"><div class="mt">'+ic('empty')+'<p><button class="btn" data-retry>Try again</button></p></div></div>'}
+  L.innerHTML=heroHTML(leadHTML(null))+bentoHTML(HC.items,HC.more);
+  var gen=S.gen;
+  loadStats().then(function(st){if(S.mode==='home'&&gen===S.gen)applyStats(st&&typeof st.files==='number'?st:topStats(HC.items,HC.more))})
+   .catch(function(){if(S.mode==='home'&&gen===S.gen)applyStats(topStats(HC.items,HC.more))});
+ }catch(e){if(S.mode==='home')L.innerHTML=heroHTML('Could not load your files ('+esc(e.message||'error')+').')+'<div class="b b-wide"><div class="mt">'+ic('empty')+'<p><button class="btn" data-retry>Try again</button></p></div></div>'}
 }
 function go(url,replace){history[replace?'replaceState':'pushState']({},'',url);return route()}
 
@@ -2294,6 +2330,8 @@ async function handleRequest(request, event) {
                     }
                 });
             }
+        } else if (command === 'stats' && request.method === 'POST') {
+            return handleStats(request, gd)
         } else if (command === 'id2path' && request.method === 'POST') {
             return handleId2Path(request, gd)
         }
@@ -2431,6 +2469,12 @@ async function handleSearch(request, gd) {
     let search_result = await
     gd.search(form.get('q') || '', form.get('page_token'), Number(form.get('page_index')));
     return new Response(rewrite(gdiencode(JSON.stringify(search_result))));
+}
+
+async function handleStats(request, gd) {
+    let force = false;
+    try { force = (await request.formData()).get('refresh') === '1'; } catch (e) { /* empty body */ }
+    return new Response(rewrite(gdiencode(JSON.stringify(await gd.stats(force)))));
 }
 
 async function handleId2Path(request, gd) {
@@ -2761,6 +2805,52 @@ class googleDrive {
             curPageIndex: page_index,
             data: res_obj
         };
+    }
+
+    /** Totals for everything under the root: files, folders, bytes and a per-extension breakdown. */
+    async stats(force = false) {
+        const c = this.stats_cache;
+        if (c && Date.now() - c.t < (force ? 15000 : 600000)) return c.data;
+        const opt = await this.requestOption();
+        const MAX_CALLS = 40; // stay well inside the Workers subrequest limit
+        const excl = " and trashed = false and mimeType != 'application/vnd.google-apps.shortcut' and mimeType != 'application/vnd.google-apps.document' and mimeType != 'application/vnd.google-apps.spreadsheet' and mimeType != 'application/vnd.google-apps.form' and mimeType != 'application/vnd.google-apps.site' and name != '.password'";
+        const out = { files: 0, folders: 0, size: 0, types: {}, partial: false };
+        let calls = 0, frontier = [this.root.id];
+        while (frontier.length && !out.partial) {
+            const next = [];
+            for (let i = 0; i < frontier.length && !out.partial; i += 25) {
+                const q = '(' + frontier.slice(i, i + 25).map(id => "'" + id + "' in parents").join(' or ') + ')' + excl;
+                let token = null;
+                do {
+                    if (calls >= MAX_CALLS) { out.partial = true; break; }
+                    const params = { includeItemsFromAllDrives: true, supportsAllDrives: true, q, pageSize: 1000, fields: 'nextPageToken, files(id, name, mimeType, size)' };
+                    if (token) params.pageToken = token;
+                    calls++;
+                    const r = await fetch('https://www.googleapis.com/drive/v3/files?' + this.enQuery(params), opt);
+                    if (!r.ok) { out.partial = true; break; }
+                    const j = await r.json();
+                    for (const f of j.files || []) {
+                        if (f.mimeType === DriveFixedTerms.folder_mime_type) { out.folders++; next.push(f.id); continue; }
+                        const sz = Number(f.size) || 0, dot = f.name.lastIndexOf('.');
+                        const key = (dot > 0 ? f.name.slice(dot + 1).toLowerCase().slice(0, 12) : '') + '|' + String(f.mimeType || '').split('/')[0];
+                        const t = out.types[key] || (out.types[key] = [0, 0]);
+                        out.files++; out.size += sz; t[0]++; t[1] += sz;
+                    }
+                    token = j.nextPageToken || null;
+                } while (token);
+            }
+            frontier = next;
+        }
+        // keep the payload small: the 60 most common types, the rest folded together
+        const keys = Object.keys(out.types).sort((a, b) => out.types[b][0] - out.types[a][0]);
+        if (keys.length > 60) {
+            const rest = [0, 0];
+            keys.slice(60).forEach(k => { rest[0] += out.types[k][0]; rest[1] += out.types[k][1]; delete out.types[k]; });
+            out.types['|other'] = rest;
+        }
+        out.t = Date.now();
+        this.stats_cache = { t: out.t, data: out };
+        return out;
     }
 
     async findParentFilesRecursion(child_id, contain_myself = true) {
